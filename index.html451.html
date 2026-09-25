@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CookStep — Tell it what to cook</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #1a120b;
+      --card: #2c1e14;
+      --ink: #f7efe6;
+      --muted: #cbbba8;
+      --accent: #e07a3d;
+      --accent-2: #f0b429;
+      --line: rgba(247, 239, 230, 0.12);
+      --shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Source Sans 3", system-ui, sans-serif;
+      background:
+        radial-gradient(1200px 600px at 10% -10%, rgba(224, 122, 61, 0.18), transparent 50%),
+        radial-gradient(900px 500px at 100% 0%, rgba(240, 180, 41, 0.1), transparent 45%),
+        var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+      line-height: 1.55;
+    }
+
+    .wrap {
+      width: min(1080px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 32px 0 80px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 36px;
+    }
+
+    .logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      background: linear-gradient(145deg, var(--accent), #c45a22);
+      display: grid;
+      place-items: center;
+      font-size: 22px;
+      box-shadow: 0 8px 20px rgba(224, 122, 61, 0.35);
+    }
+
+    h1 {
+      font-family: Fraunces, Georgia, serif;
+      font-size: 1.55rem;
+      font-weight: 700;
+    }
+
+    .tag {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .hero {
+      background: linear-gradient(180deg, rgba(44, 30, 20, 0.9), rgba(36, 24, 15, 0.95));
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      padding: 36px 28px 28px;
+      box-shadow: var(--shadow);
+      margin-bottom: 28px;
+    }
+
+    .hero h2 {
+      font-family: Fraunces, Georgia, serif;
+      font-size: clamp(1.8rem, 4vw, 2.6rem);
+      line-height: 1.15;
+      margin-bottom: 10px;
+    }
+
+    .hero p {
+      color: var(--muted);
+      max-width: 560px;
+      margin-bottom: 22px;
+    }
+
+    form.search {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    input[type="text"] {
+      flex: 1 1 260px;
+      min-height: 54px;
+      border: 1px solid var(--line);
+      background: #1a120b;
+      color: var(--ink);
+      border-radius: 16px;
+      padding: 0 18px;
+      font: inherit;
+      font-size: 1.05rem;
+      outline: none;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(224, 122, 61, 0.2);
+    }
+
+    button {
+      font: inherit;
+      cursor: pointer;
+      border: none;
+      border-radius: 16px;
+      min-height: 54px;
+      padding: 0 20px;
+      font-weight: 600;
+    }
+
+    .btn-primary {
+      background: linear-gradient(180deg, #ee8a4b, var(--accent));
+      color: #1a120b;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--ink);
+      border: 1px solid var(--line);
+    }
+
+    .btn-primary:hover { filter: brightness(1.06); }
+    .btn-ghost:hover { background: rgba(255,255,255,0.04); }
+
+    .status {
+      margin-top: 16px;
+      color: var(--muted);
+      min-height: 1.4em;
+    }
+
+    .results {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+
+    .meal-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+
+    .meal-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(224, 122, 61, 0.45);
+    }
+
+    .meal-card img {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .meal-card .meta {
+      padding: 12px 14px 14px;
+    }
+
+    .meal-card h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .meal-card span {
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .recipe {
+      display: none;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .recipe.visible { display: block; }
+
+    .recipe-hero {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+    }
+
+    .recipe-hero img {
+      width: 100%;
+      height: 100%;
+      min-height: 280px;
+      object-fit: cover;
+    }
+
+    .recipe-intro {
+      padding: 28px 26px;
+    }
+
+    .pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .pill {
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      background: rgba(224, 122, 61, 0.16);
+      color: #f3c39a;
+      border-radius: 999px;
+      padding: 5px 10px;
+    }
+
+    .recipe-intro h2 {
+      font-family: Fraunces, Georgia, serif;
+      font-size: clamp(1.6rem, 3vw, 2.2rem);
+      margin-bottom: 10px;
+    }
+
+    .recipe-body {
+      display: grid;
+      grid-template-columns: 0.9fr 1.2fr;
+      border-top: 1px solid var(--line);
+    }
+
+    .ingredients, .steps {
+      padding: 26px;
+    }
+
+    .ingredients {
+      background: rgba(0,0,0,0.18);
+      border-right: 1px solid var(--line);
+    }
+
+    h3.sec {
+      font-family: Fraunces, Georgia, serif;
+      font-size: 1.25rem;
+      margin-bottom: 14px;
+    }
+
+    .ingredients ul {
+      list-style: none;
+    }
+
+    .ingredients li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px dashed var(--line);
+    }
+
+    .ingredients input {
+      margin-top: 5px;
+      accent-color: var(--accent);
+    }
+
+    .steps ol {
+      padding-left: 0;
+      counter-reset: step;
+    }
+
+    .steps li {
+      list-style: none;
+      counter-increment: step;
+      display: grid;
+      grid-template-columns: 36px 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .steps li::before {
+      content: counter(step);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, #ee8a4b, var(--accent));
+      color: #1a120b;
+      font-weight: 700;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+
+    .yt {
+      display: inline-block;
+      margin-top: 8px;
+      color: var(--accent-2);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    footer {
+      margin-top: 40px;
+      color: var(--muted);
+      font-size: 0.85rem;
+      text-align: center;
+    }
+
+    @media (max-width: 800px) {
+      .recipe-hero, .recipe-body { grid-template-columns: 1fr; }
+      .ingredients { border-right: none; border-bottom: 1px solid var(--line); }
+      .recipe-hero img { min-height: 220px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="logo">🍳</div>
+      <div>
+        <h1>CookStep</h1>
+        <div class="tag">Tell it what you want to cook</div>
+      </div>
+    </header>
+
+    <section class="hero">
+      <h2>What are we making tonight?</h2>
+      <p>Type a dish — jollof rice, pasta, fried chicken, pancakes — and get ingredients plus a clear step-by-step process.</p>
+      <form class="search" id="searchForm">
+        <input type="text" id="query" placeholder="e.g. jollof rice, carbonara, beef stew…" autocomplete="off" />
+        <button class="btn-primary" type="submit">Get recipe</button>
+        <button class="btn-ghost" type="button" id="randomBtn">Surprise me</button>
+      </form>
+      <div class="status" id="status"></div>
+    </section>
+
+    <div class="results" id="results"></div>
+    <article class="recipe" id="recipe"></article>
+    <footer>Recipes from TheMealDB · CookStep is a simple kitchen helper</footer>
+  </div>
+
+  <script>
+    const API = "https://www.themealdb.com/api/json/v1/1/";
+    const form = document.getElementById("searchForm");
+    const queryInput = document.getElementById("query");
+    const statusEl = document.getElementById("status");
+    const resultsEl = document.getElementById("results");
+    const recipeEl = document.getElementById("recipe");
+
+    form.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const q = queryInput.value.trim();
+      if (!q) {
+        statusEl.textContent = "Type a dish first.";
+        return;
+      }
+      await searchMeals(q);
+    });
+
+    document.getElementById("randomBtn").addEventListener("click", async function () {
+      setStatus("Picking something tasty…");
+      resultsEl.innerHTML = "";
+      try {
+        const res = await fetch(API + "random.php");
+        const data = await res.json();
+        if (data.meals && data.meals[0]) {
+          renderRecipe(data.meals[0]);
+        } else {
+          setStatus("Could not fetch a random recipe.");
+        }
+      } catch (err) {
+        setStatus("Network error. Check your connection.");
+      }
+    });
+
+    async function searchMeals(q) {
+      setStatus('Looking up recipes for "' + q + '"…');
+      resultsEl.innerHTML = "";
+      recipeEl.classList.remove("visible");
+      try {
+        const res = await fetch(API + "search.php?s=" + encodeURIComponent(q));
+        const data = await res.json();
+        if (!data.meals) {
+          setStatus('No exact match. Try a simpler name like "chicken", "rice", or "cake".');
+          return;
+        }
+        setStatus(data.meals.length + " recipe" + (data.meals.length > 1 ? "s" : "") + " found. Pick one.");
+
+        let cardsHtml = "";
+        data.meals.forEach(function (m) {
+          cardsHtml +=
+            '<article class="meal-card" data-id="' + m.idMeal + '">' +
+              '<img src="' + m.strMealThumb + '" alt="' + escapeHtml(m.strMeal) + '" />' +
+              '<div class="meta">' +
+                "<h3>" + escapeHtml(m.strMeal) + "</h3>" +
+                "<span>" + escapeHtml(m.strArea || "") + " · " + escapeHtml(m.strCategory || "") + "</span>" +
+              "</div>" +
+            "</article>";
+        });
+        resultsEl.innerHTML = cardsHtml;
+
+        resultsEl.querySelectorAll(".meal-card").forEach(function (card) {
+          card.addEventListener("click", function () {
+            const meal = data.meals.find(function (x) {
+              return x.idMeal === card.dataset.id;
+            });
+            if (meal) renderRecipe(meal);
+          });
+        });
+
+        if (data.meals.length === 1) {
+          renderRecipe(data.meals[0]);
+        }
+      } catch (err) {
+        setStatus("Could not reach the recipe service. Try again.");
+      }
+    }
+
+    function renderRecipe(meal) {
+      const ingredients = [];
+      for (let i = 1; i <= 20; i++) {
+        const name = (meal["strIngredient" + i] || "").trim();
+        const measure = (meal["strMeasure" + i] || "").trim();
+        if (name) {
+          ingredients.push({ name: name, measure: measure });
+        }
+      }
+
+      let steps = (meal.strInstructions || "")
+        .split(/\r?\n+/)
+        .map(function (s) { return s.trim(); })
+        .filter(Boolean);
+
+      if (steps.length <= 1) {
+        steps = (meal.strInstructions || "")
+          .split(/(?<=\.)\s+/)
+          .map(function (s) { return s.trim(); })
+          .filter(function (s) { return s.length > 8; });
+      }
+
+      // Build pills
+      let pillsHtml = "";
+      if (meal.strCategory) {
+        pillsHtml += '<span class="pill">' + escapeHtml(meal.strCategory) + "</span>";
+      }
+      if (meal.strArea) {
+        pillsHtml += '<span class="pill">' + escapeHtml(meal.strArea) + "</span>";
+      }
+
+      // Build YouTube link
+      let ytHtml = "";
+      if (meal.strYoutube) {
+        ytHtml = '<a class="yt" href="' + meal.strYoutube + '" target="_blank" rel="noopener">Watch a video walkthrough →</a>';
+      }
+
+      // Build ingredients list
+      let ingredientsHtml = "";
+      ingredients.forEach(function (ing) {
+        ingredientsHtml +=
+          "<li>" +
+            '<input type="checkbox" />' +
+            "<span><strong>" + escapeHtml(ing.measure) + "</strong> " + escapeHtml(ing.name) + "</span>" +
+          "</li>";
+      });
+
+      // Build steps list
+      let stepsHtml = "";
+      steps.forEach(function (s) {
+        stepsHtml += "<li><div>" + escapeHtml(s) + "</div></li>";
+      });
+
+      recipeEl.innerHTML =
+        '<div class="recipe-hero">' +
+          '<img src="' + meal.strMealThumb + '" alt="' + escapeHtml(meal.strMeal) + '" />' +
+          '<div class="recipe-intro">' +
+            '<div class="pills">' + pillsHtml + "</div>" +
+            "<h2>" + escapeHtml(meal.strMeal) + "</h2>" +
+            "<p>Gather the ingredients, then follow the steps in order. Tick items off as you go.</p>" +
+            ytHtml +
+          "</div>" +
+        "</div>" +
+        '<div class="recipe-body">' +
+          '<div class="ingredients">' +
+            '<h3 class="sec">Ingredients</h3>' +
+            "<ul>" + ingredientsHtml + "</ul>" +
+          "</div>" +
+          '<div class="steps">' +
+            '<h3 class="sec">Step by step</h3>' +
+            "<ol>" + stepsHtml + "</ol>" +
+          "</div>" +
+        "</div>";
+
+      recipeEl.classList.add("visible");
+      recipeEl.scrollIntoView({ behavior: "smooth", block: "start" });
+      setStatus("Here’s your cook-along for " + meal.strMeal + ".");
+    }
+
+    function setStatus(msg) {
+      statusEl.textContent = msg;
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+  </script>
+</body>
+</html>
